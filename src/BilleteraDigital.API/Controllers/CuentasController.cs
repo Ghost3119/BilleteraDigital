@@ -81,7 +81,9 @@ public sealed class CuentasController : ControllerBase
 
     /// <summary>Obtiene el historial paginado de transacciones de una cuenta.</summary>
     /// <param name="id">ID de la cuenta.</param>
-    /// <param name="paginationParams">Parámetros de paginación (pageNumber, pageSize).</param>
+    /// <param name="paginationParams.pageNumber">Número de página (mínimo 1, por defecto 1).</param>
+    /// <param name="paginationParams.pageSize">Registros por página (entre 1 y 50, por defecto 10).</param>
+    /// <param name="cancellationToken">Token de cancelación.</param>
     [HttpGet("{id:guid}/transacciones")]
     [ProducesResponseType(typeof(PagedResult<TransaccionResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(object), StatusCodes.Status404NotFound)]

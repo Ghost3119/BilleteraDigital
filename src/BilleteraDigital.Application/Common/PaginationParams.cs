@@ -1,3 +1,6 @@
+using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
+
 namespace BilleteraDigital.Application.Common;
 
 /// <summary>
@@ -12,6 +15,8 @@ public sealed class PaginationParams
     private int _pageNumber = 1;
 
     /// <summary>Número de página solicitada (mínimo 1).</summary>
+    [Range(1, int.MaxValue, ErrorMessage = "PageNumber debe ser mayor o igual a 1.")]
+    [DefaultValue(1)]
     public int PageNumber
     {
         get => _pageNumber;
@@ -19,6 +24,8 @@ public sealed class PaginationParams
     }
 
     /// <summary>Tamaño de página (entre 1 y 50; por defecto 10).</summary>
+    [Range(1, MaxPageSize, ErrorMessage = "PageSize debe estar entre 1 y 50.")]
+    [DefaultValue(10)]
     public int PageSize
     {
         get => _pageSize;
