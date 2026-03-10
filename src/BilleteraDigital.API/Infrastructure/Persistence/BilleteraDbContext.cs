@@ -21,5 +21,14 @@ public sealed class BilleteraDbContext : DbContext
 
         // Aplica todas las configuraciones del assembly actual (Fluent API)
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(BilleteraDbContext).Assembly);
+
+        // ── Global Query Filters: Soft Delete ────────────────────────────────
+        // Los registros marcados como eliminados quedan invisibles a todas las
+        // consultas LINQ sin necesidad de filtrar manualmente en cada repositorio.
+        modelBuilder.Entity<Cuenta>()
+                    .HasQueryFilter(c => !c.EstaEliminado);
+
+        modelBuilder.Entity<Usuario>()
+                    .HasQueryFilter(u => !u.EstaEliminado);
     }
 }

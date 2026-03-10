@@ -7,6 +7,8 @@ namespace BilleteraDigital.API.Infrastructure.Persistence.Configurations;
 /// <summary>
 /// Configuración Fluent API para la entidad Usuario.
 /// Índice único en Email; longitudes NVARCHAR razonables.
+/// Mapea las columnas de Soft Delete.
+/// La relación 1-N con Cuentas se declara en CuentaConfiguration.
 /// </summary>
 internal sealed class UsuarioConfiguration : IEntityTypeConfiguration<Usuario>
 {
@@ -37,5 +39,16 @@ internal sealed class UsuarioConfiguration : IEntityTypeConfiguration<Usuario>
 
         builder.Property(u => u.FechaRegistro)
                .IsRequired();
+
+        // ── Soft Delete ──────────────────────────────────────────────────────
+        builder.Property(u => u.EstaEliminado)
+               .IsRequired()
+               .HasDefaultValue(false);
+
+        builder.Property(u => u.FechaEliminacion)
+               .IsRequired(false);
+
+        // La navegación inversa (Cuentas) es mapeada por EF mediante la FK
+        // declarada en CuentaConfiguration. No se necesita configuración adicional aquí.
     }
 }

@@ -14,6 +14,19 @@ public sealed class Usuario
     public string PasswordHash    { get; private set; }
     public DateTime FechaRegistro { get; private set; }
 
+    // ── Soft Delete ──────────────────────────────────────────────────────────
+    /// <summary>Indica si el usuario fue eliminado lógicamente.</summary>
+    public bool EstaEliminado { get; private set; } = false;
+
+    /// <summary>Fecha UTC de la eliminación lógica. Null si el usuario está activo.</summary>
+    public DateTime? FechaEliminacion { get; private set; }
+
+    // ── Navegación: cuentas del usuario ─────────────────────────────────────
+    private readonly List<Cuenta> _cuentas = [];
+
+    /// <summary>Cuentas bancarias asociadas a este usuario.</summary>
+    public IReadOnlyCollection<Cuenta> Cuentas => _cuentas.AsReadOnly();
+
     // ── Constructor privado para EF Core ────────────────────────────────────
 #pragma warning disable CS8618
     private Usuario() { }
@@ -40,5 +53,17 @@ public sealed class Usuario
         Email          = email.Trim().ToLowerInvariant();
         PasswordHash   = passwordHash;
         FechaRegistro  = DateTime.UtcNow;
+    }
+
+    // ── Comportamiento del dominio ───────────────────────────────────────────
+
+    /// <summary>
+    /// Elimina lógicamente el usuario (Soft Delete).
+    /// Los filtros globales de EF lo ocultarán de todas las consultas.
+    /// </summary>
+    public void Eliminar()
+    {
+        EstaEliminado    = true;
+        FechaEliminacion = DateTime.UtcNow;
     }
 }

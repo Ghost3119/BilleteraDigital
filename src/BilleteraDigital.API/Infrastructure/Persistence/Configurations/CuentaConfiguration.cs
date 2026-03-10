@@ -8,6 +8,7 @@ namespace BilleteraDigital.API.Infrastructure.Persistence.Configurations;
 /// <summary>
 /// Configuración Fluent API para la entidad Cuenta.
 /// Usa tipos de datos precisos para importes financieros (DECIMAL(18,2)).
+/// Mapea la FK hacia Usuario y las columnas de Soft Delete.
 /// </summary>
 internal sealed class CuentaConfiguration : IEntityTypeConfiguration<Cuenta>
 {
@@ -47,7 +48,29 @@ internal sealed class CuentaConfiguration : IEntityTypeConfiguration<Cuenta>
         builder.Property(c => c.FechaUltimaOperacion)
                .IsRequired(false);
 
-        // Navegación hacia transacciones
+        // ── Relación 1-N: Usuario → Cuentas ─────────────────────────────────
+        // UsuarioId es nullable para preservar cuentas históricas sin propietario.
+        builder.Property(c => c.UsuarioId)
+               .IsRequired(false);
+
+        builder.HasOne(c => c.Usuario)
+               .WithMany(u => u.Cuentas)
+               .HasForeignKey(c => c.UsuarioId)
+               .OnDelete(DeleteBehavior.Restrict)
+               .HasConstraintName("FK_Cuentas_Usuarios_UsuarioId");
+
+        builder.HasIndex(c => c.UsuarioId)
+               .HasDatabaseName("IX_Cuentas_UsuarioId");
+
+        // ── Soft Delete ──────────────────────────────────────────────────────
+        builder.Property(c => c.EstaEliminado)
+               .IsRequired()
+               .HasDefaultValue(false);
+
+        builder.Property(c => c.FechaEliminacion)
+               .IsRequired(false);
+
+        // ── Navegación hacia transacciones ───────────────────────────────────
         builder.HasMany(c => c.Transacciones)
                .WithOne()
                .HasForeignKey(t => t.CuentaOrigenId)

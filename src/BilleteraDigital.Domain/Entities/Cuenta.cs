@@ -19,6 +19,20 @@ public sealed class Cuenta
     public DateTime FechaCreacion { get; private set; }
     public DateTime? FechaUltimaOperacion { get; private set; }
 
+    // ── Relación con Usuario (FK) ────────────────────────────────────────────
+    /// <summary>Clave foránea al Usuario propietario de esta cuenta. Nullable para preservar compatibilidad con cuentas históricas.</summary>
+    public Guid? UsuarioId { get; private set; }
+
+    /// <summary>Propiedad de navegación hacia el Usuario propietario.</summary>
+    public Usuario? Usuario { get; private set; }
+
+    // ── Soft Delete ──────────────────────────────────────────────────────────
+    /// <summary>Indica si la cuenta fue eliminada lógicamente. Los filtros globales de EF la excluyen automáticamente.</summary>
+    public bool EstaEliminado { get; private set; } = false;
+
+    /// <summary>Fecha UTC en que se realizó la eliminación lógica. Null si la cuenta está activa.</summary>
+    public DateTime? FechaEliminacion { get; private set; }
+
     // ── Navegación ──────────────────────────────────────────────────────────
     private readonly List<Transaccion> _transacciones = [];
     public IReadOnlyCollection<Transaccion> Transacciones => _transacciones.AsReadOnly();
@@ -93,6 +107,16 @@ public sealed class Cuenta
     /// Desactiva la cuenta.
     /// </summary>
     public void Desactivar() => Estado = EstadoCuenta.Inactiva;
+
+    /// <summary>
+    /// Elimina lógicamente la cuenta (Soft Delete).
+    /// Una vez eliminada, los filtros globales de EF la ocultarán de todas las consultas.
+    /// </summary>
+    public void Eliminar()
+    {
+        EstaEliminado   = true;
+        FechaEliminacion = DateTime.UtcNow;
+    }
 
     // ── Validaciones privadas ────────────────────────────────────────────────
 
