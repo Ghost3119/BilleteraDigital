@@ -16,6 +16,9 @@ builder.Services.AddCasosDeUso();
 // Seguridad JWT
 builder.Services.AddSeguridadJwt(builder.Configuration);
 
+// CORS — expone X-Pagination al frontend
+builder.Services.AddCorsBilletera(builder.Configuration);
+
 // Documentación Swagger/OpenAPI
 builder.Services.AddSwaggerDocumentacion();
 
@@ -38,6 +41,9 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+// UseCors debe ir antes de UseAuthentication/UseAuthorization
+app.UseCors(ServiceCollectionExtensions.CorsPolicyName);
 
 app.UseAuthentication();
 app.UseAuthorization();

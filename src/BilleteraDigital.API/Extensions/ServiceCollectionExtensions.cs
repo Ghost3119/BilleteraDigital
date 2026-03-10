@@ -92,6 +92,46 @@ public static class ServiceCollectionExtensions
         return services;
     }
 
+    // ── CORS ─────────────────────────────────────────────────────────────
+    /// <summary>
+    /// Nombre de la política CORS utilizada en toda la aplicación.
+    /// Referenciarlo desde Program.cs evita cadenas mágicas duplicadas.
+    /// </summary>
+    public const string CorsPolicyName = "BilleteraDigitalCors";
+
+    public static IServiceCollection AddCorsBilletera(
+        this IServiceCollection services,
+        IConfiguration configuration)
+    {
+        // Los orígenes permitidos se leen desde la configuración para no hardcodear
+        // URLs de frontend en el código fuente.
+        // Ejemplo en appsettings.Development.json:
+        //   "Cors": { "AllowedOrigins": ["http://localhost:4200", "http://localhost:3000"] }
+        var allowedOrigins = configuration
+            .GetSection("Cors:AllowedOrigins")
+            .Get<string[]>() ?? [];
+
+        services.AddCors(options =>
+        {
+            options.AddPolicy(CorsPolicyName, policy =>
+            {
+                if (allowedOrigins.Length > 0)
+                    policy.WithOrigins(allowedOrigins);
+                else
+                    policy.AllowAnyOrigin();
+
+                policy
+                    .AllowAnyHeader()
+                    .AllowAnyMethod()
+                    // Exponer X-Pagination para que el navegador permita al frontend leerlo.
+                    // Sin esto, CORS bloquea el acceso al header desde JavaScript.
+                    .WithExposedHeaders("X-Pagination");
+            });
+        });
+
+        return services;
+    }
+
     // ── Swagger / OpenAPI ────────────────────────────────────────────────
     public static IServiceCollection AddSwaggerDocumentacion(this IServiceCollection services)
     {

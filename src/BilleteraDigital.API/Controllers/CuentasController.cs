@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using System.Text.Json;
 using BilleteraDigital.Application.Common;
 using BilleteraDigital.Application.DTOs;
 using BilleteraDigital.Application.UseCases.Cuenta;
@@ -84,8 +85,12 @@ public sealed class CuentasController : ControllerBase
     /// <param name="paginationParams.pageNumber">Número de página (mínimo 1, por defecto 1).</param>
     /// <param name="paginationParams.pageSize">Registros por página (entre 1 y 50, por defecto 10).</param>
     /// <param name="cancellationToken">Token de cancelación.</param>
+    /// <remarks>
+    /// Los metadatos de paginación (TotalCount, TotalPages, PageNumber, PageSize) se devuelven
+    /// en el header <c>X-Pagination</c> como JSON. El body contiene únicamente el array de ítems.
+    /// </remarks>
     [HttpGet("{id:guid}/transacciones")]
-    [ProducesResponseType(typeof(PagedResult<TransaccionResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(IEnumerable<TransaccionResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(object), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> ObtenerHistorial(
         Guid id,
@@ -96,7 +101,19 @@ public sealed class CuentasController : ControllerBase
         if (!resultado.EsExitoso)
             return NotFound(new { error = resultado.Error });
 
-        return Ok(resultado.Valor);
+        var pagedResult = resultado.Valor!;
+
+        var paginationMetadata = new
+        {
+            pagedResult.TotalCount,
+            pagedResult.PageSize,
+            pagedResult.PageNumber,
+            pagedResult.TotalPages
+        };
+
+        Response.Headers["X-Pagination"] = JsonSerializer.Serialize(paginationMetadata);
+
+        return Ok(pagedResult.Items);
     }
 
     /// <summary>
