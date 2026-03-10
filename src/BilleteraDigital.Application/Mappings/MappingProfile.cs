@@ -1,5 +1,5 @@
 using AutoMapper;
-using BilleteraDigital.Application.DTOs;
+using BilleteraDigital.Application.UseCases.Cuenta;
 using BilleteraDigital.Domain.Entities;
 
 namespace BilleteraDigital.Application.Mappings;

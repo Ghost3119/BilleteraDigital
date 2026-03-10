@@ -1,7 +1,6 @@
 using System.Security.Claims;
 using System.Text.Json;
 using BilleteraDigital.Application.Common;
-using BilleteraDigital.Application.DTOs;
 using BilleteraDigital.Application.UseCases.Cuenta;
 using BilleteraDigital.Application.UseCases.Transferencia;
 using Microsoft.AspNetCore.Authorization;

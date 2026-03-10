@@ -1,6 +1,5 @@
 using AutoMapper;
 using BilleteraDigital.Application.Common;
-using BilleteraDigital.Application.DTOs;
 using BilleteraDigital.Application.Mappings;
 using BilleteraDigital.Application.Ports.Repositories;
 

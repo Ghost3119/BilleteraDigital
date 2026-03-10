@@ -1,4 +1,3 @@
-using BilleteraDigital.Application.DTOs;
 using BilleteraDigital.Application.UseCases.Usuario;
 using Microsoft.AspNetCore.Mvc;
 

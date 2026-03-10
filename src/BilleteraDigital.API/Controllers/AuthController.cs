@@ -1,8 +1,8 @@
 using System.Security.Claims;
 using System.Security.Cryptography;
-using BilleteraDigital.Application.DTOs;
 using BilleteraDigital.Application.Ports.Repositories;
 using BilleteraDigital.Application.Ports.Services;
+using BilleteraDigital.Application.UseCases.Auth;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BilleteraDigital.API.Controllers;

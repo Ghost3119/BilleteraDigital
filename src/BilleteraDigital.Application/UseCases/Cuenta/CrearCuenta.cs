@@ -1,5 +1,4 @@
 using BilleteraDigital.Application.Common;
-using BilleteraDigital.Application.DTOs;
 using BilleteraDigital.Application.Ports.Repositories;
 using BilleteraDigital.Application.Ports.Services;
 
