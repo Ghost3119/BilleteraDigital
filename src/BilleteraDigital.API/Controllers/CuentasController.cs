@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using BilleteraDigital.Application.Common;
 using BilleteraDigital.Application.DTOs;
 using BilleteraDigital.Application.UseCases.Cuenta;
 using BilleteraDigital.Application.UseCases.Transferencia;
@@ -78,14 +79,18 @@ public sealed class CuentasController : ControllerBase
         return Ok(resultado.Valor);
     }
 
-    /// <summary>Obtiene el historial de transacciones de una cuenta.</summary>
+    /// <summary>Obtiene el historial paginado de transacciones de una cuenta.</summary>
     /// <param name="id">ID de la cuenta.</param>
+    /// <param name="paginationParams">Parámetros de paginación (pageNumber, pageSize).</param>
     [HttpGet("{id:guid}/transacciones")]
-    [ProducesResponseType(typeof(IEnumerable<TransaccionResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(PagedResult<TransaccionResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(object), StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> ObtenerHistorial(Guid id, CancellationToken cancellationToken)
+    public async Task<IActionResult> ObtenerHistorial(
+        Guid id,
+        [FromQuery] PaginationParams paginationParams,
+        CancellationToken cancellationToken)
     {
-        var resultado = await _obtenerHistorial.EjecutarAsync(id, cancellationToken);
+        var resultado = await _obtenerHistorial.EjecutarAsync(id, paginationParams, cancellationToken);
         if (!resultado.EsExitoso)
             return NotFound(new { error = resultado.Error });
 

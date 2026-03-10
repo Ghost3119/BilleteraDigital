@@ -1,3 +1,4 @@
+using BilleteraDigital.Application.Common;
 using BilleteraDigital.Application.Ports.Repositories;
 using BilleteraDigital.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -15,6 +16,16 @@ internal sealed class TransaccionRepository : ITransaccionRepository
     {
         _context = context;
     }
+
+    public Task<PagedResult<Transaccion>> ObtenerPorCuentaPaginadoAsync(
+        Guid cuentaId,
+        PaginationParams paginationParams,
+        CancellationToken cancellationToken = default)
+        => _context.Transacciones
+                   .AsNoTracking()
+                   .Where(t => t.CuentaOrigenId == cuentaId)
+                   .OrderByDescending(t => t.FechaHora)
+                   .ToPagedResultAsync(paginationParams, cancellationToken);
 
     public async Task<IEnumerable<Transaccion>> ObtenerPorCuentaAsync(
         Guid cuentaId,
