@@ -9,12 +9,15 @@ namespace BilleteraDigital.Application.Ports.Repositories;
 public interface ITransaccionRepository
 {
     /// <summary>
-    /// Devuelve el historial paginado de transacciones de una cuenta,
+    /// Devuelve el historial filtrado y paginado de transacciones de una cuenta,
     /// ordenado de más reciente a más antiguo.
+    /// Los filtros dinámicos se transportan dentro de <paramref name="queryParams"/>
+    /// como Base64; la decodificación y aplicación de cláusulas WHERE las realiza
+    /// la implementación concreta en Infrastructure.
     /// </summary>
-    Task<PagedResult<Transaccion>> ObtenerPorCuentaPaginadoAsync(
+    Task<PagedResult<Transaccion>> ObtenerPorCuentaFiltradoAsync(
         Guid cuentaId,
-        PaginationParams paginationParams,
+        GenericQueryParams queryParams,
         CancellationToken cancellationToken = default);
 
     Task<IEnumerable<Transaccion>> ObtenerPorCuentaAsync(Guid cuentaId, CancellationToken cancellationToken = default);

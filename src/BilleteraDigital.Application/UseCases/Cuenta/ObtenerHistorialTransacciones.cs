@@ -5,7 +5,7 @@ using BilleteraDigital.Application.Ports.Repositories;
 namespace BilleteraDigital.Application.UseCases.Cuenta;
 
 /// <summary>
-/// Caso de uso: Obtener el historial paginado de transacciones de una cuenta.
+/// Caso de uso: Obtener el historial filtrado y paginado de transacciones de una cuenta.
 /// </summary>
 public sealed class ObtenerHistorialTransacciones
 {
@@ -22,15 +22,15 @@ public sealed class ObtenerHistorialTransacciones
 
     public async Task<Result<PagedResult<TransaccionResponse>>> EjecutarAsync(
         Guid cuentaId,
-        PaginationParams paginationParams,
+        GenericQueryParams queryParams,
         CancellationToken cancellationToken = default)
     {
         var existe = await _cuentaRepository.ExisteAsync(cuentaId, cancellationToken);
         if (!existe)
             return Result<PagedResult<TransaccionResponse>>.Fallido($"Cuenta '{cuentaId}' no encontrada.");
 
-        var paginaEntidades = await _transaccionRepository.ObtenerPorCuentaPaginadoAsync(
-            cuentaId, paginationParams, cancellationToken);
+        var paginaEntidades = await _transaccionRepository.ObtenerPorCuentaFiltradoAsync(
+            cuentaId, queryParams, cancellationToken);
 
         var paginaDto = new PagedResult<TransaccionResponse>(
             paginaEntidades.Items.Select(t => new TransaccionResponse(

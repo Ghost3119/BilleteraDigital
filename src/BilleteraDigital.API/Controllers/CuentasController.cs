@@ -80,10 +80,17 @@ public sealed class CuentasController : ControllerBase
         return Ok(resultado.Valor);
     }
 
-    /// <summary>Obtiene el historial paginado de transacciones de una cuenta.</summary>
+    /// <summary>Obtiene el historial filtrado y paginado de transacciones de una cuenta.</summary>
     /// <param name="id">ID de la cuenta.</param>
-    /// <param name="paginationParams.pageNumber">Número de página (mínimo 1, por defecto 1).</param>
-    /// <param name="paginationParams.pageSize">Registros por página (entre 1 y 50, por defecto 10).</param>
+    /// <param name="queryParams.pageNumber">Número de página (mínimo 1, por defecto 1).</param>
+    /// <param name="queryParams.pageSize">Registros por página (entre 1 y 50, por defecto 10).</param>
+    /// <param name="queryParams.filtersBase64">
+    /// Filtros dinámicos: objeto JSON serializado en Base64.
+    /// Claves soportadas: <c>fechaInicio</c>, <c>fechaFin</c>, <c>tipo</c>,
+    /// <c>montoMinimo</c>, <c>montoMaximo</c>.
+    /// Ejemplo JSON antes de codificar:
+    /// <code>{"fechaInicio":"2025-01-01","fechaFin":"2025-12-31","tipo":"Transferencia"}</code>
+    /// </param>
     /// <param name="cancellationToken">Token de cancelación.</param>
     /// <remarks>
     /// Los metadatos de paginación (TotalCount, TotalPages, PageNumber, PageSize) se devuelven
@@ -94,10 +101,10 @@ public sealed class CuentasController : ControllerBase
     [ProducesResponseType(typeof(object), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> ObtenerHistorial(
         Guid id,
-        [FromQuery] PaginationParams paginationParams,
+        [FromQuery] GenericQueryParams queryParams,
         CancellationToken cancellationToken)
     {
-        var resultado = await _obtenerHistorial.EjecutarAsync(id, paginationParams, cancellationToken);
+        var resultado = await _obtenerHistorial.EjecutarAsync(id, queryParams, cancellationToken);
         if (!resultado.EsExitoso)
             return NotFound(new { error = resultado.Error });
 
