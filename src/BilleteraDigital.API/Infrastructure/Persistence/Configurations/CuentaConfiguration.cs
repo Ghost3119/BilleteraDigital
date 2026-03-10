@@ -78,9 +78,14 @@ internal sealed class CuentaConfiguration : IEntityTypeConfiguration<Cuenta>
                .IsRequired(false);
 
         // ── Navegación hacia transacciones ───────────────────────────────────
+        // Se usa una shadow property "CuentaId" como FK de EF Core para no
+        // colisionar con la propiedad de dominio CuentaOrigenId.
+        // Sin esto, EF sobreescribiría CuentaOrigenId con el Id de la cuenta
+        // propietaria de la colección al hacer FK-fixup, dejando CuentaDestinoId
+        // correcto pero CuentaOrigenId incorrecto en los registros de crédito.
         builder.HasMany(c => c.Transacciones)
                .WithOne()
-               .HasForeignKey(t => t.CuentaOrigenId)
+               .HasForeignKey("CuentaId")
                .OnDelete(DeleteBehavior.Restrict);
     }
 }

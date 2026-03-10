@@ -93,14 +93,15 @@ public sealed class CuentasController : ControllerBase
     }
 
     /// <summary>
-    /// Realiza una transferencia de fondos desde la cuenta del usuario autenticado
+    /// Realiza una transferencia de fondos desde una cuenta del usuario autenticado
     /// hacia la cuenta destino indicada en el body.
-    /// La cuenta origen se determina exclusivamente a partir del JWT.
+    /// El usuario debe ser el titular de la cuenta origen; de lo contrario se devuelve 403.
     /// </summary>
-    /// <param name="request">Cuenta destino, monto y descripción.</param>
+    /// <param name="request">Cuenta origen, cuenta destino, monto y descripción.</param>
     [HttpPost("transferencias")]
     [ProducesResponseType(typeof(TransferenciaResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(object), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(object), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(object), StatusCodes.Status422UnprocessableEntity)]
     public async Task<IActionResult> RealizarTransferencia(
         [FromBody] RealizarTransferenciaRequest request,
@@ -110,7 +111,7 @@ public sealed class CuentasController : ControllerBase
         if (subClaim is null || !Guid.TryParse(subClaim, out var usuarioId))
             return Unauthorized(new { error = "Token inválido: no se pudo identificar al usuario." });
 
-        var command   = new TransferenciaCommand(usuarioId, request.CuentaDestinoId, request.Monto, request.Descripcion);
+        var command   = new TransferenciaCommand(usuarioId, request.CuentaOrigenId, request.CuentaDestinoId, request.Monto, request.Descripcion);
         var resultado = await _realizarTransferencia.EjecutarAsync(command, cancellationToken);
 
         if (!resultado.EsExitoso)

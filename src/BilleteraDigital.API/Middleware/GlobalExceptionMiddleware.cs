@@ -43,6 +43,9 @@ public sealed class GlobalExceptionMiddleware
     {
         var (statusCode, titulo, detalle) = excepcion switch
         {
+            AccesoDenegadoException accesoDenegadoEx =>
+                (HttpStatusCode.Forbidden, "Acceso denegado", accesoDenegadoEx.Message),
+
             DomainException domainEx =>
                 (HttpStatusCode.UnprocessableEntity, "Regla de negocio violada", domainEx.Message),
 

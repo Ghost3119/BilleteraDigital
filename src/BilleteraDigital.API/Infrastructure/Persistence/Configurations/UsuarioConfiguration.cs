@@ -48,6 +48,14 @@ internal sealed class UsuarioConfiguration : IEntityTypeConfiguration<Usuario>
         builder.Property(u => u.FechaEliminacion)
                .IsRequired(false);
 
+        // ── Refresh Token ─────────────────────────────────────────────────────
+        builder.Property(u => u.RefreshToken)
+               .HasMaxLength(512)
+               .IsRequired(false);
+
+        builder.Property(u => u.RefreshTokenExpiryTime)
+               .IsRequired(false);
+
         // La navegación inversa (Cuentas) es mapeada por EF mediante la FK
         // declarada en CuentaConfiguration. No se necesita configuración adicional aquí.
     }

@@ -9,9 +9,19 @@ public interface IUnitOfWork
     Task<int> GuardarCambiosAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Ejecuta <paramref name="operacion"/> dentro de una transacción de base de datos,
+    /// envuelta en la estrategia de reintentos del proveedor (p.ej. SqlServerRetryingExecutionStrategy).
+    /// Toda la lógica transaccional debe ir dentro del delegate; el SaveChanges se invoca
+    /// automáticamente antes del Commit.
+    /// </summary>
+    Task EjecutarEnTransaccionAsync(Func<Task> operacion, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Inicia una transacción de base de datos explícita.
-    /// El llamador es responsable de hacer <c>await CommitAsync</c> en caso de éxito
-    /// o <c>await RollbackAsync</c> en caso de error.
+    /// <para>
+    /// ADVERTENCIA: no compatible con <c>EnableRetryOnFailure</c>. Usar
+    /// <see cref="EjecutarEnTransaccionAsync"/> en entornos de producción con SQL Server.
+    /// </para>
     /// </summary>
     Task BeginTransactionAsync(CancellationToken cancellationToken = default);
 

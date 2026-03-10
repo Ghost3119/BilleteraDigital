@@ -14,6 +14,12 @@ public sealed class Usuario
     public string PasswordHash    { get; private set; }
     public DateTime FechaRegistro { get; private set; }
 
+    // ── Refresh Token ────────────────────────────────────────────────────────
+    /// <summary>Token opaco almacenado en la BD; se rota en cada uso.</summary>
+    public string?   RefreshToken           { get; private set; }
+    /// <summary>Fecha de expiración del Refresh Token activo. Null si no hay sesión activa.</summary>
+    public DateTime? RefreshTokenExpiryTime { get; private set; }
+
     // ── Soft Delete ──────────────────────────────────────────────────────────
     /// <summary>Indica si el usuario fue eliminado lógicamente.</summary>
     public bool EstaEliminado { get; private set; } = false;
@@ -56,6 +62,16 @@ public sealed class Usuario
     }
 
     // ── Comportamiento del dominio ───────────────────────────────────────────
+
+    /// <summary>
+    /// Almacena un nuevo Refresh Token y su fecha de expiración.
+    /// Llamar con <c>null</c> / <c>null</c> para revocar la sesión.
+    /// </summary>
+    public void ActualizarRefreshToken(string? token, DateTime? expiry)
+    {
+        RefreshToken           = token;
+        RefreshTokenExpiryTime = expiry;
+    }
 
     /// <summary>
     /// Elimina lógicamente el usuario (Soft Delete).

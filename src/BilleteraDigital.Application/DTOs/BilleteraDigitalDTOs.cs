@@ -6,9 +6,12 @@ namespace BilleteraDigital.Application.DTOs;
 
 /// <summary>
 /// Body enviado por el cliente al realizar una transferencia.
-/// CuentaOrigenId NO se incluye aquí: se extrae del JWT en el controlador.
+/// El cliente especifica explícitamente la cuenta origen (multi-cuenta).
+/// La validación de titularidad se realiza en el Use Case comparando
+/// CuentaOrigen.UsuarioId contra el UsuarioId extraído del JWT.
 /// </summary>
 public record RealizarTransferenciaRequest(
+    Guid CuentaOrigenId,
     Guid CuentaDestinoId,
     decimal Monto,
     string Descripcion
@@ -16,11 +19,12 @@ public record RealizarTransferenciaRequest(
 
 /// <summary>
 /// Comando interno que viaja del Controller al Use Case.
-/// Combina el UsuarioId del JWT con los datos del request HTTP.
-/// No es parte del contrato HTTP público.
+/// Combina el UsuarioId del JWT (para la validación de titularidad)
+/// con los datos del request HTTP. No es parte del contrato HTTP público.
 /// </summary>
 public record TransferenciaCommand(
     Guid UsuarioId,
+    Guid CuentaOrigenId,
     Guid CuentaDestinoId,
     decimal Monto,
     string Descripcion
@@ -91,6 +95,20 @@ public record RegistrarUsuarioRequest(
 public record LoginConEmailRequest(
     string Email,
     string Password
+);
+
+/// <summary>Respuesta unificada para Login y Refresh; incluye ambos tokens.</summary>
+public record TokenResponse(
+    string AccessToken,
+    string RefreshToken,
+    string ExpiraEn,
+    string Tipo
+);
+
+/// <summary>Body del endpoint POST /api/v1/Auth/refresh.</summary>
+public record RefreshTokenRequest(
+    string AccessToken,
+    string RefreshToken
 );
 
 public record UsuarioRegistradoResponse(

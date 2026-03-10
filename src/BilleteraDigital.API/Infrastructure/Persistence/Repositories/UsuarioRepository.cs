@@ -22,10 +22,26 @@ internal sealed class UsuarioRepository : IUsuarioRepository
                          .AsNoTracking()
                          .FirstOrDefaultAsync(u => u.Email == email, cancellationToken);
 
+    /// <summary>
+    /// Devuelve el usuario con change-tracking activo (necesario para persistir cambios como el Refresh Token).
+    /// </summary>
+    public async Task<Usuario?> ObtenerPorEmailTrackedAsync(
+        string email, CancellationToken cancellationToken = default)
+        => await _context.Usuarios
+                         .FirstOrDefaultAsync(u => u.Email == email, cancellationToken);
+
     public async Task<Usuario?> ObtenerPorIdAsync(
         Guid id, CancellationToken cancellationToken = default)
         => await _context.Usuarios
                          .AsNoTracking()
+                         .FirstOrDefaultAsync(u => u.Id == id, cancellationToken);
+
+    /// <summary>
+    /// Devuelve el usuario con change-tracking activo para el flujo de Refresh Token.
+    /// </summary>
+    public async Task<Usuario?> ObtenerPorIdTrackedAsync(
+        Guid id, CancellationToken cancellationToken = default)
+        => await _context.Usuarios
                          .FirstOrDefaultAsync(u => u.Id == id, cancellationToken);
 
     public async Task<bool> ExistePorEmailAsync(
@@ -39,5 +55,11 @@ internal sealed class UsuarioRepository : IUsuarioRepository
     {
         await _context.Usuarios.AddAsync(usuario, cancellationToken);
         return usuario;
+    }
+
+    public Task ActualizarAsync(Usuario usuario, CancellationToken cancellationToken = default)
+    {
+        _context.Usuarios.Update(usuario);
+        return Task.CompletedTask;
     }
 }
