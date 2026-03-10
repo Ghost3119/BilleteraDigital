@@ -4,6 +4,7 @@ using BilleteraDigital.API.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BilleteraDigital.API.Migrations
 {
     [DbContext(typeof(BilleteraDbContext))]
-    partial class BilleteraDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260310024810_CuentaIncremental")]
+    partial class CuentaIncremental
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -21,6 +24,9 @@ namespace BilleteraDigital.API.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
+
+            modelBuilder.HasSequence<int>("CuentaNumbers")
+                .StartsAt(1000000000L);
 
             modelBuilder.Entity("BilleteraDigital.Domain.Entities.Cuenta", b =>
                 {
@@ -49,11 +55,12 @@ namespace BilleteraDigital.API.Migrations
                         .HasMaxLength(150)
                         .HasColumnType("nvarchar(150)");
 
-                    b.Property<long>("NumeroCuenta")
+                    b.Property<string>("NumeroCuenta")
+                        .IsRequired()
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("NumeroCuenta"), 1000000000L);
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)")
+                        .HasDefaultValueSql("CAST(NEXT VALUE FOR [CuentaNumbers] AS NVARCHAR(20))");
 
                     b.Property<decimal>("Saldo")
                         .HasColumnType("DECIMAL(18,2)");

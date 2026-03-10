@@ -21,9 +21,14 @@ internal sealed class CuentaRepository : ICuentaRepository
                          .Include(c => c.Transacciones)
                          .FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
 
-    public async Task<Cuenta?> ObtenerPorNumeroAsync(string numeroCuenta, CancellationToken cancellationToken = default)
+    public async Task<Cuenta?> ObtenerPorNumeroAsync(long numeroCuenta, CancellationToken cancellationToken = default)
         => await _context.Cuentas
                          .FirstOrDefaultAsync(c => c.NumeroCuenta == numeroCuenta, cancellationToken);
+
+    public async Task<Cuenta?> ObtenerPorUsuarioIdAsync(Guid usuarioId, CancellationToken cancellationToken = default)
+        => await _context.Cuentas
+                         .Include(c => c.Transacciones)
+                         .FirstOrDefaultAsync(c => c.UsuarioId == usuarioId, cancellationToken);
 
     public async Task<IEnumerable<Cuenta>> ObtenerTodasAsync(CancellationToken cancellationToken = default)
         => await _context.Cuentas

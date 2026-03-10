@@ -12,7 +12,7 @@ public sealed class Cuenta
 {
     // ── Propiedades de identidad e información ────────────────────────────────
     public Guid Id { get; private set; }
-    public string NumeroCuenta { get; private set; }
+    public long NumeroCuenta { get; private set; }
     public string NombreTitular { get; private set; }
     public decimal Saldo { get; private set; }
     public EstadoCuenta Estado { get; private set; }
@@ -46,30 +46,29 @@ public sealed class Cuenta
     /// <summary>
     /// Crea una nueva cuenta asociada a un usuario.
     /// <para>
-    /// <paramref name="numeroCuenta"/> es generado por la capa de aplicación antes de llamar
-    /// a este constructor — el dominio sólo valida que no llegue vacío.
+    /// <c>NumeroCuenta</c> NO se acepta como parámetro: es un <c>long</c> con Identity en la
+    /// base de datos (bigint IDENTITY(1000000000, 1)). EF Core lo lee de vuelta tras
+    /// <c>SaveChanges</c> y puebla la propiedad automáticamente.
     /// </para>
     /// <para>
     /// <paramref name="nombreTitular"/> es el nombre del usuario resuelto desde el repositorio
     /// antes de crear la entidad — nunca se acepta desde la entrada del cliente.
     /// </para>
+    /// <para>
+    /// El saldo inicial es siempre <c>0</c> por política de negocio; los fondos
+    /// se acreditan únicamente a través de <see cref="Acreditar"/>.
+    /// </para>
     /// </summary>
-    public Cuenta(string numeroCuenta, string nombreTitular, Guid? usuarioId, decimal saldoInicial = 0m)
+    public Cuenta(string nombreTitular, Guid? usuarioId)
     {
-        if (string.IsNullOrWhiteSpace(numeroCuenta))
-            throw new ArgumentException("El número de cuenta no puede estar vacío.", nameof(numeroCuenta));
-
         if (string.IsNullOrWhiteSpace(nombreTitular))
             throw new ArgumentException("El nombre del titular no puede estar vacío.", nameof(nombreTitular));
 
-        if (saldoInicial < 0)
-            throw new MontoInvalidoException(saldoInicial);
-
         Id            = Guid.NewGuid();
-        NumeroCuenta  = numeroCuenta;
+        NumeroCuenta  = 0L;  // Sentinel: EF Core sobreescribe con el valor Identity tras SaveChanges
         NombreTitular = nombreTitular;
         UsuarioId     = usuarioId;
-        Saldo         = saldoInicial;
+        Saldo         = 0m;  // Saldo inicial siempre cero por política de negocio
         Estado        = EstadoCuenta.Activa;
         FechaCreacion = DateTime.UtcNow;
     }
@@ -105,6 +104,50 @@ public sealed class Cuenta
         FechaUltimaOperacion = DateTime.UtcNow;
 
         _transacciones.Add(Transaccion.CrearDebito(Id, monto, descripcion, Saldo));
+    }
+
+    /// <summary>
+    /// Retira fondos de la cuenta en el contexto de una transferencia saliente.
+    /// Registra la transacción con el <paramref name="cuentaDestinoId"/> para trazabilidad completa.
+    /// <para>Reglas de dominio aplicadas:</para>
+    /// <list type="bullet">
+    ///   <item>La cuenta debe estar activa.</item>
+    ///   <item>El monto debe ser mayor a cero (<see cref="MontoInvalidoException"/>).</item>
+    ///   <item>El saldo debe ser suficiente (<see cref="SaldoInsuficienteException"/>).</item>
+    /// </list>
+    /// </summary>
+    public void Retirar(decimal monto, Guid cuentaDestinoId, string descripcion)
+    {
+        ValidarActiva();
+        ValidarMonto(monto);
+
+        if (Saldo < monto)
+            throw new SaldoInsuficienteException(Saldo, monto);
+
+        Saldo -= monto;
+        FechaUltimaOperacion = DateTime.UtcNow;
+
+        _transacciones.Add(Transaccion.CrearTransferencia(Id, cuentaDestinoId, monto, descripcion, Saldo));
+    }
+
+    /// <summary>
+    /// Deposita fondos en la cuenta en el contexto de una transferencia entrante.
+    /// Registra la transacción con el <paramref name="cuentaOrigenId"/> para trazabilidad completa.
+    /// <para>Reglas de dominio aplicadas:</para>
+    /// <list type="bullet">
+    ///   <item>La cuenta debe estar activa.</item>
+    ///   <item>El monto debe ser mayor a cero (<see cref="MontoInvalidoException"/>).</item>
+    /// </list>
+    /// </summary>
+    public void Depositar(decimal monto, Guid cuentaOrigenId, string descripcion)
+    {
+        ValidarActiva();
+        ValidarMonto(monto);
+
+        Saldo += monto;
+        FechaUltimaOperacion = DateTime.UtcNow;
+
+        _transacciones.Add(Transaccion.CrearTransferencia(cuentaOrigenId, Id, monto, descripcion, Saldo));
     }
 
     /// <summary>

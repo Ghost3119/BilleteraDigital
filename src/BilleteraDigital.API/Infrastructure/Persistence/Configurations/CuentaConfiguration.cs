@@ -1,6 +1,7 @@
 using BilleteraDigital.Domain.Entities;
 using BilleteraDigital.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace BilleteraDigital.API.Infrastructure.Persistence.Configurations;
@@ -21,9 +22,15 @@ internal sealed class CuentaConfiguration : IEntityTypeConfiguration<Cuenta>
         builder.Property(c => c.Id)
                .ValueGeneratedNever();
 
+        // ── NumeroCuenta: bigint IDENTITY(1000000000, 1) ─────────────────────
+        // SQL Server genera el valor automáticamente al insertar.
+        // EF Core lo lee de vuelta tras SaveChanges y puebla la propiedad long.
+        // AfterSaveBehavior.Ignore impide que EF incluya esta columna en UPDATE,
+        // evitando "Cannot update identity column 'NumeroCuenta'" de SQL Server.
         builder.Property(c => c.NumeroCuenta)
                .IsRequired()
-               .HasMaxLength(20);
+               .UseIdentityColumn(1_000_000_000L, 1)
+               .Metadata.SetAfterSaveBehavior(PropertySaveBehavior.Ignore);
 
         builder.HasIndex(c => c.NumeroCuenta)
                .IsUnique()

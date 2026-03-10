@@ -35,17 +35,15 @@ public sealed class CuentasController : ControllerBase
 
     /// <summary>
     /// Crea una nueva cuenta para el usuario autenticado.
-    /// El número de cuenta y el nombre del titular son generados/resueltos por el sistema.
-    /// El usuario se identifica exclusivamente a través del JWT — no se acepta ningún ID en el body.
+    /// No requiere body: el número de cuenta es generado por la base de datos (secuencia SQL Server),
+    /// el nombre del titular proviene del JWT y el saldo inicial es siempre cero.
+    /// El usuario se identifica exclusivamente a través del JWT.
     /// </summary>
-    /// <param name="request">Saldo inicial opcional (por defecto 0).</param>
     [HttpPost]
     [ProducesResponseType(typeof(CuentaResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(object), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> CrearCuenta(
-        [FromBody] CrearCuentaRequest request,
-        CancellationToken cancellationToken)
+    public async Task<IActionResult> CrearCuenta(CancellationToken cancellationToken)
     {
         // Extraer el UsuarioId del claim "sub" del JWT.
         // ASP.NET Core mapea JwtRegisteredClaimNames.Sub → ClaimTypes.NameIdentifier.
@@ -54,7 +52,7 @@ public sealed class CuentasController : ControllerBase
         if (subClaim is null || !Guid.TryParse(subClaim, out var usuarioId))
             return Unauthorized(new { error = "Token inválido: no se pudo identificar al usuario." });
 
-        var command  = new CrearCuentaCommand(usuarioId, request.SaldoInicial);
+        var command   = new CrearCuentaCommand(usuarioId);
         var resultado = await _crearCuenta.EjecutarAsync(command, cancellationToken);
 
         if (!resultado.EsExitoso)
@@ -94,8 +92,12 @@ public sealed class CuentasController : ControllerBase
         return Ok(resultado.Valor);
     }
 
-    /// <summary>Realiza una transferencia de fondos entre dos cuentas.</summary>
-    /// <param name="request">Datos de la transferencia.</param>
+    /// <summary>
+    /// Realiza una transferencia de fondos desde la cuenta del usuario autenticado
+    /// hacia la cuenta destino indicada en el body.
+    /// La cuenta origen se determina exclusivamente a partir del JWT.
+    /// </summary>
+    /// <param name="request">Cuenta destino, monto y descripción.</param>
     [HttpPost("transferencias")]
     [ProducesResponseType(typeof(TransferenciaResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(object), StatusCodes.Status400BadRequest)]
@@ -104,7 +106,13 @@ public sealed class CuentasController : ControllerBase
         [FromBody] RealizarTransferenciaRequest request,
         CancellationToken cancellationToken)
     {
-        var resultado = await _realizarTransferencia.EjecutarAsync(request, cancellationToken);
+        var subClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (subClaim is null || !Guid.TryParse(subClaim, out var usuarioId))
+            return Unauthorized(new { error = "Token inválido: no se pudo identificar al usuario." });
+
+        var command   = new TransferenciaCommand(usuarioId, request.CuentaDestinoId, request.Monto, request.Descripcion);
+        var resultado = await _realizarTransferencia.EjecutarAsync(command, cancellationToken);
+
         if (!resultado.EsExitoso)
             return UnprocessableEntity(new { error = resultado.Error });
 

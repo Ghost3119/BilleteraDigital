@@ -4,8 +4,23 @@ namespace BilleteraDigital.Application.DTOs;
 
 // ── Requests ─────────────────────────────────────────────────────────────────
 
+/// <summary>
+/// Body enviado por el cliente al realizar una transferencia.
+/// CuentaOrigenId NO se incluye aquí: se extrae del JWT en el controlador.
+/// </summary>
 public record RealizarTransferenciaRequest(
-    Guid CuentaOrigenId,
+    Guid CuentaDestinoId,
+    decimal Monto,
+    string Descripcion
+);
+
+/// <summary>
+/// Comando interno que viaja del Controller al Use Case.
+/// Combina el UsuarioId del JWT con los datos del request HTTP.
+/// No es parte del contrato HTTP público.
+/// </summary>
+public record TransferenciaCommand(
+    Guid UsuarioId,
     Guid CuentaDestinoId,
     decimal Monto,
     string Descripcion
@@ -13,23 +28,24 @@ public record RealizarTransferenciaRequest(
 
 /// <summary>
 /// Body enviado por el cliente al crear una cuenta.
-/// El cliente NO puede elegir número de cuenta, nombre ni usuarioId —
-/// todos son resueltos o generados por el sistema.
+/// Está intencionalmente vacío: el número de cuenta lo genera la base de datos
+/// (secuencia SQL Server), el nombre del titular viene del JWT y el saldo
+/// inicial es siempre cero por política de negocio.
 /// </summary>
-public record CrearCuentaRequest(decimal SaldoInicial = 0m);
+public record CrearCuentaRequest();
 
 /// <summary>
 /// Comando interno que viaja del Controller al Use Case.
-/// Lleva el UsuarioId extraído del JWT de forma segura en la infraestructura.
+/// Lleva únicamente el UsuarioId extraído del JWT; no acepta ningún dato del cliente.
 /// No es parte del contrato HTTP público.
 /// </summary>
-public record CrearCuentaCommand(Guid UsuarioId, decimal SaldoInicial);
+public record CrearCuentaCommand(Guid UsuarioId);
 
 // ── Responses ────────────────────────────────────────────────────────────────
 
 public record CuentaResponse(
     Guid Id,
-    string NumeroCuenta,
+    long NumeroCuenta,
     string NombreTitular,
     decimal Saldo,
     EstadoCuenta Estado,
@@ -49,7 +65,7 @@ public record TransferenciaResponse(
 
 public record SaldoResponse(
     Guid CuentaId,
-    string NumeroCuenta,
+    long NumeroCuenta,
     string NombreTitular,
     decimal Saldo,
     DateTime ConsultadoEn
