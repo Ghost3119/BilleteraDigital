@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using BilleteraDigital.Application.DTOs;
 using BilleteraDigital.Application.UseCases.Cuenta;
 using BilleteraDigital.Application.UseCases.Transferencia;
@@ -32,16 +33,30 @@ public sealed class CuentasController : ControllerBase
         _realizarTransferencia = realizarTransferencia;
     }
 
-    /// <summary>Crea una nueva cuenta en el sistema.</summary>
-    /// <param name="request">Datos de la nueva cuenta.</param>
+    /// <summary>
+    /// Crea una nueva cuenta para el usuario autenticado.
+    /// El número de cuenta y el nombre del titular son generados/resueltos por el sistema.
+    /// El usuario se identifica exclusivamente a través del JWT — no se acepta ningún ID en el body.
+    /// </summary>
+    /// <param name="request">Saldo inicial opcional (por defecto 0).</param>
     [HttpPost]
     [ProducesResponseType(typeof(CuentaResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(object), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> CrearCuenta(
         [FromBody] CrearCuentaRequest request,
         CancellationToken cancellationToken)
     {
-        var resultado = await _crearCuenta.EjecutarAsync(request, cancellationToken);
+        // Extraer el UsuarioId del claim "sub" del JWT.
+        // ASP.NET Core mapea JwtRegisteredClaimNames.Sub → ClaimTypes.NameIdentifier.
+        var subClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        if (subClaim is null || !Guid.TryParse(subClaim, out var usuarioId))
+            return Unauthorized(new { error = "Token inválido: no se pudo identificar al usuario." });
+
+        var command  = new CrearCuentaCommand(usuarioId, request.SaldoInicial);
+        var resultado = await _crearCuenta.EjecutarAsync(command, cancellationToken);
+
         if (!resultado.EsExitoso)
             return BadRequest(new { error = resultado.Error });
 
@@ -96,3 +111,4 @@ public sealed class CuentasController : ControllerBase
         return Ok(resultado.Valor);
     }
 }
+

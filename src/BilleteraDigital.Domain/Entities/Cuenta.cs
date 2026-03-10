@@ -44,9 +44,17 @@ public sealed class Cuenta
 
     // ── Constructor de creación ──────────────────────────────────────────────
     /// <summary>
-    /// Crea una nueva cuenta con saldo inicial validado.
+    /// Crea una nueva cuenta asociada a un usuario.
+    /// <para>
+    /// <paramref name="numeroCuenta"/> es generado por la capa de aplicación antes de llamar
+    /// a este constructor — el dominio sólo valida que no llegue vacío.
+    /// </para>
+    /// <para>
+    /// <paramref name="nombreTitular"/> es el nombre del usuario resuelto desde el repositorio
+    /// antes de crear la entidad — nunca se acepta desde la entrada del cliente.
+    /// </para>
     /// </summary>
-    public Cuenta(string numeroCuenta, string nombreTitular, decimal saldoInicial = 0m)
+    public Cuenta(string numeroCuenta, string nombreTitular, Guid? usuarioId, decimal saldoInicial = 0m)
     {
         if (string.IsNullOrWhiteSpace(numeroCuenta))
             throw new ArgumentException("El número de cuenta no puede estar vacío.", nameof(numeroCuenta));
@@ -57,11 +65,12 @@ public sealed class Cuenta
         if (saldoInicial < 0)
             throw new MontoInvalidoException(saldoInicial);
 
-        Id = Guid.NewGuid();
-        NumeroCuenta = numeroCuenta;
+        Id            = Guid.NewGuid();
+        NumeroCuenta  = numeroCuenta;
         NombreTitular = nombreTitular;
-        Saldo = saldoInicial;
-        Estado = EstadoCuenta.Activa;
+        UsuarioId     = usuarioId;
+        Saldo         = saldoInicial;
+        Estado        = EstadoCuenta.Activa;
         FechaCreacion = DateTime.UtcNow;
     }
 
