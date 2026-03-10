@@ -43,7 +43,7 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 // UseCors debe ir antes de UseAuthentication/UseAuthorization
-app.UseCors(ServiceCollectionExtensions.CorsPolicyName);
+app.UseCors(BilleteraDigital.API.Extensions.ServiceCollectionExtensions.CorsPolicyName);
 
 app.UseAuthentication();
 app.UseAuthorization();

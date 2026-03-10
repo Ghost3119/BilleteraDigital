@@ -97,7 +97,7 @@ public sealed class CuentasController : ControllerBase
     /// en el header <c>X-Pagination</c> como JSON. El body contiene únicamente el array de ítems.
     /// </remarks>
     [HttpGet("{id:guid}/transacciones")]
-    [ProducesResponseType(typeof(IEnumerable<TransaccionResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(IEnumerable<TransaccionDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(object), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> ObtenerHistorial(
         Guid id,

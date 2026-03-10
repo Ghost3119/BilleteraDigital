@@ -2,6 +2,7 @@ using System.Text;
 using BilleteraDigital.API.Infrastructure.Persistence;
 using BilleteraDigital.API.Infrastructure.Persistence.Repositories;
 using BilleteraDigital.API.Infrastructure.Security;
+using BilleteraDigital.Application.Mappings;
 using BilleteraDigital.Application.Ports.Repositories;
 using BilleteraDigital.Application.Ports.Services;
 using BilleteraDigital.Application.UseCases.Cuenta;
@@ -53,6 +54,11 @@ public static class ServiceCollectionExtensions
         services.AddScoped<CrearCuenta>();
         services.AddScoped<ObtenerHistorialTransacciones>();
         services.AddScoped<RegistrarUsuario>();
+
+        // AutoMapper: descubre MappingProfile y todos los perfiles en el assembly de Application.
+        // AddAutoMapper está integrado en AutoMapper 13+ sin paquete adicional.
+        services.AddAutoMapper(cfg => { }, typeof(MappingProfile));
+
         return services;
     }
 
