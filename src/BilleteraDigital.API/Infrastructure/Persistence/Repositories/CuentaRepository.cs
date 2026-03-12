@@ -30,6 +30,12 @@ internal sealed class CuentaRepository : ICuentaRepository
                          .Include(c => c.Transacciones)
                          .FirstOrDefaultAsync(c => c.UsuarioId == usuarioId, cancellationToken);
 
+    public async Task<IReadOnlyList<Cuenta>> ObtenerListaPorUsuarioIdAsync(Guid usuarioId, CancellationToken cancellationToken = default)
+        => await _context.Cuentas
+                         .Where(c => c.UsuarioId == usuarioId)
+                         .AsNoTracking()
+                         .ToListAsync(cancellationToken);
+
     public async Task<IEnumerable<Cuenta>> ObtenerTodasAsync(CancellationToken cancellationToken = default)
         => await _context.Cuentas
                          .AsNoTracking()

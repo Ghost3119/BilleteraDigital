@@ -4,13 +4,17 @@ namespace BilleteraDigital.Application.UseCases.Transferencia;
 
 /// <summary>
 /// Body enviado por el cliente al realizar una transferencia.
-/// El cliente especifica explícitamente la cuenta origen (multi-cuenta).
-/// La validación de titularidad se realiza en el Use Case comparando
-/// CuentaOrigen.UsuarioId contra el UsuarioId extraído del JWT.
+/// El cliente especifica la cuenta origen por su Id (extraído de su sesión activa)
+/// y el destinatario mediante un identificador amigable: correo electrónico O número de cuenta.
+/// La resolución del destinatario al CuentaId concreto ocurre en el Use Case.
 /// </summary>
 public record RealizarTransferenciaRequest(
     Guid CuentaOrigenId,
-    Guid CuentaDestinoId,
+    /// <summary>
+    /// Correo electrónico del destinatario (p. ej. "maria@ejemplo.com")
+    /// o número de cuenta de 16 dígitos (p. ej. "1234567890123456").
+    /// </summary>
+    string Destinatario,
     decimal Monto,
     string Descripcion
 );
@@ -25,7 +29,7 @@ public record RealizarTransferenciaRequest(
 public record TransferenciaCommand(
     Guid UsuarioId,
     Guid CuentaOrigenId,
-    Guid CuentaDestinoId,
+    string Destinatario,
     decimal Monto,
     string Descripcion
 );

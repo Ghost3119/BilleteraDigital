@@ -51,6 +51,7 @@ public static class ServiceCollectionExtensions
     {
         services.AddScoped<RealizarTransferencia>();
         services.AddScoped<ConsultarSaldo>();
+        services.AddScoped<ConsultarMisCuentas>();
         services.AddScoped<CrearCuenta>();
         services.AddScoped<ObtenerHistorialTransacciones>();
         services.AddScoped<RegistrarUsuario>();

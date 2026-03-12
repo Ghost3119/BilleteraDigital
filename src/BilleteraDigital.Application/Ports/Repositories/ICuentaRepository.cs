@@ -11,6 +11,7 @@ public interface ICuentaRepository
     Task<Cuenta?> ObtenerPorIdAsync(Guid id, CancellationToken cancellationToken = default);
     Task<Cuenta?> ObtenerPorNumeroAsync(long numeroCuenta, CancellationToken cancellationToken = default);
     Task<Cuenta?> ObtenerPorUsuarioIdAsync(Guid usuarioId, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<Cuenta>> ObtenerListaPorUsuarioIdAsync(Guid usuarioId, CancellationToken cancellationToken = default);
     Task<IEnumerable<Cuenta>> ObtenerTodasAsync(CancellationToken cancellationToken = default);
     Task<Cuenta> CrearAsync(Cuenta cuenta, CancellationToken cancellationToken = default);
     Task ActualizarAsync(Cuenta cuenta, CancellationToken cancellationToken = default);

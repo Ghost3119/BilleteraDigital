@@ -19,17 +19,20 @@ public sealed class CuentasController : ControllerBase
 {
     private readonly CrearCuenta _crearCuenta;
     private readonly ConsultarSaldo _consultarSaldo;
+    private readonly ConsultarMisCuentas _consultarMisCuentas;
     private readonly ObtenerHistorialTransacciones _obtenerHistorial;
     private readonly RealizarTransferencia _realizarTransferencia;
 
     public CuentasController(
         CrearCuenta crearCuenta,
         ConsultarSaldo consultarSaldo,
+        ConsultarMisCuentas consultarMisCuentas,
         ObtenerHistorialTransacciones obtenerHistorial,
         RealizarTransferencia realizarTransferencia)
     {
         _crearCuenta           = crearCuenta;
         _consultarSaldo        = consultarSaldo;
+        _consultarMisCuentas   = consultarMisCuentas;
         _obtenerHistorial      = obtenerHistorial;
         _realizarTransferencia = realizarTransferencia;
     }
@@ -63,6 +66,24 @@ public sealed class CuentasController : ControllerBase
             nameof(ConsultarSaldo),
             new { id = resultado.Valor!.Id },
             resultado.Valor);
+    }
+
+    /// <summary>
+    /// Devuelve todas las cuentas que pertenecen al usuario autenticado.
+    /// Útil para que el frontend descubra el/los cuentaId(s) tras el login
+    /// sin necesidad de almacenarlos manualmente en localStorage.
+    /// </summary>
+    [HttpGet("mias")]
+    [ProducesResponseType(typeof(IReadOnlyList<CuentaResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> ObtenerMisCuentas(CancellationToken cancellationToken)
+    {
+        var subClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (subClaim is null || !Guid.TryParse(subClaim, out var usuarioId))
+            return Unauthorized(new { error = "Token inválido: no se pudo identificar al usuario." });
+
+        var resultado = await _consultarMisCuentas.EjecutarAsync(usuarioId, cancellationToken);
+        return Ok(resultado.Valor);
     }
 
     /// <summary>Consulta el saldo disponible de una cuenta.</summary>
@@ -123,11 +144,13 @@ public sealed class CuentasController : ControllerBase
     }
 
     /// <summary>
-    /// Realiza una transferencia de fondos desde una cuenta del usuario autenticado
-    /// hacia la cuenta destino indicada en el body.
+    /// Realiza una transferencia de fondos desde una cuenta del usuario autenticado.
+    /// El destinatario se identifica con su correo electrónico o número de cuenta (no UUID).
     /// El usuario debe ser el titular de la cuenta origen; de lo contrario se devuelve 403.
     /// </summary>
-    /// <param name="request">Cuenta origen, cuenta destino, monto y descripción.</param>
+    /// <param name="request">
+    /// Cuenta origen (Id), destinatario (email o número de cuenta), monto y descripción.
+    /// </param>
     [HttpPost("transferencias")]
     [ProducesResponseType(typeof(TransferenciaResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(object), StatusCodes.Status400BadRequest)]
@@ -141,7 +164,7 @@ public sealed class CuentasController : ControllerBase
         if (subClaim is null || !Guid.TryParse(subClaim, out var usuarioId))
             return Unauthorized(new { error = "Token inválido: no se pudo identificar al usuario." });
 
-        var command   = new TransferenciaCommand(usuarioId, request.CuentaOrigenId, request.CuentaDestinoId, request.Monto, request.Descripcion);
+        var command   = new TransferenciaCommand(usuarioId, request.CuentaOrigenId, request.Destinatario, request.Monto, request.Descripcion);
         var resultado = await _realizarTransferencia.EjecutarAsync(command, cancellationToken);
 
         if (!resultado.EsExitoso)
