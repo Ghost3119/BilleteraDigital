@@ -4,7 +4,8 @@ using BilleteraDigital.Application.Ports.Repositories;
 namespace BilleteraDigital.Application.UseCases.Cuenta;
 
 /// <summary>
-/// Caso de uso: Devuelve todas las cuentas que pertenecen al usuario autenticado.
+/// Caso de uso: Devuelve una página de cuentas que pertenecen al usuario autenticado.
+/// Cumple con la regla de arquitectura: toda colección se devuelve paginada.
 /// </summary>
 public sealed class ConsultarMisCuentas
 {
@@ -15,21 +16,29 @@ public sealed class ConsultarMisCuentas
         _cuentaRepository = cuentaRepository;
     }
 
-    public async Task<Result<IReadOnlyList<CuentaResponse>>> EjecutarAsync(
+    public async Task<Result<PagedResult<CuentaResponse>>> EjecutarAsync(
         Guid usuarioId,
+        GenericQueryParams queryParams,
         CancellationToken cancellationToken = default)
     {
-        var cuentas = await _cuentaRepository.ObtenerListaPorUsuarioIdAsync(usuarioId, cancellationToken);
+        var pagina = await _cuentaRepository.ObtenerPaginadoPorUsuarioIdAsync(
+            usuarioId, queryParams, cancellationToken);
 
-        var respuestas = cuentas.Select(c => new CuentaResponse(
+        var respuestas = pagina.Items.Select(c => new CuentaResponse(
             c.Id,
             c.NumeroCuenta,
             c.NombreTitular,
             c.Saldo,
             c.Estado,
             c.FechaCreacion,
-            c.FechaUltimaOperacion)).ToList();
+            c.FechaUltimaOperacion));
 
-        return Result<IReadOnlyList<CuentaResponse>>.Exitoso(respuestas);
+        var paginaDto = new PagedResult<CuentaResponse>(
+            respuestas,
+            pagina.TotalCount,
+            pagina.PageNumber,
+            pagina.PageSize);
+
+        return Result<PagedResult<CuentaResponse>>.Exitoso(paginaDto);
     }
 }

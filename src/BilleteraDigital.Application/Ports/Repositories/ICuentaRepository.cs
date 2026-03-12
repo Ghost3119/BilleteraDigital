@@ -1,3 +1,4 @@
+using BilleteraDigital.Application.Common;
 using BilleteraDigital.Domain.Entities;
 
 namespace BilleteraDigital.Application.Ports.Repositories;
@@ -11,7 +12,16 @@ public interface ICuentaRepository
     Task<Cuenta?> ObtenerPorIdAsync(Guid id, CancellationToken cancellationToken = default);
     Task<Cuenta?> ObtenerPorNumeroAsync(long numeroCuenta, CancellationToken cancellationToken = default);
     Task<Cuenta?> ObtenerPorUsuarioIdAsync(Guid usuarioId, CancellationToken cancellationToken = default);
-    Task<IReadOnlyList<Cuenta>> ObtenerListaPorUsuarioIdAsync(Guid usuarioId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Devuelve una página de cuentas del usuario.
+    /// REGLA: todos los endpoints que retornen colecciones DEBEN usar paginación.
+    /// </summary>
+    Task<PagedResult<Cuenta>> ObtenerPaginadoPorUsuarioIdAsync(
+        Guid usuarioId,
+        GenericQueryParams queryParams,
+        CancellationToken cancellationToken = default);
+
     Task<IEnumerable<Cuenta>> ObtenerTodasAsync(CancellationToken cancellationToken = default);
     Task<Cuenta> CrearAsync(Cuenta cuenta, CancellationToken cancellationToken = default);
     Task ActualizarAsync(Cuenta cuenta, CancellationToken cancellationToken = default);

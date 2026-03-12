@@ -1,3 +1,4 @@
+using BilleteraDigital.Application.Common;
 using BilleteraDigital.Application.Ports.Repositories;
 using BilleteraDigital.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -30,11 +31,16 @@ internal sealed class CuentaRepository : ICuentaRepository
                          .Include(c => c.Transacciones)
                          .FirstOrDefaultAsync(c => c.UsuarioId == usuarioId, cancellationToken);
 
-    public async Task<IReadOnlyList<Cuenta>> ObtenerListaPorUsuarioIdAsync(Guid usuarioId, CancellationToken cancellationToken = default)
-        => await _context.Cuentas
-                         .Where(c => c.UsuarioId == usuarioId)
-                         .AsNoTracking()
-                         .ToListAsync(cancellationToken);
+    /// <inheritdoc />
+    public Task<PagedResult<Cuenta>> ObtenerPaginadoPorUsuarioIdAsync(
+        Guid usuarioId,
+        GenericQueryParams queryParams,
+        CancellationToken cancellationToken = default)
+        => _context.Cuentas
+                   .Where(c => c.UsuarioId == usuarioId)
+                   .OrderBy(c => c.FechaCreacion)
+                   .AsNoTracking()
+                   .ToPagedResultAsync(queryParams, cancellationToken);
 
     public async Task<IEnumerable<Cuenta>> ObtenerTodasAsync(CancellationToken cancellationToken = default)
         => await _context.Cuentas

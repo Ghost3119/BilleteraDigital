@@ -17,6 +17,11 @@ namespace BilleteraDigital.API.Controllers;
 [Authorize]
 public sealed class CuentasController : ControllerBase
 {
+    private static readonly JsonSerializerOptions _camelCase = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+    };
+
     private readonly CrearCuenta _crearCuenta;
     private readonly ConsultarSaldo _consultarSaldo;
     private readonly ConsultarMisCuentas _consultarMisCuentas;
@@ -69,21 +74,36 @@ public sealed class CuentasController : ControllerBase
     }
 
     /// <summary>
-    /// Devuelve todas las cuentas que pertenecen al usuario autenticado.
+    /// Devuelve una página de cuentas que pertenecen al usuario autenticado.
     /// Útil para que el frontend descubra el/los cuentaId(s) tras el login
     /// sin necesidad de almacenarlos manualmente en localStorage.
     /// </summary>
     [HttpGet("mias")]
-    [ProducesResponseType(typeof(IReadOnlyList<CuentaResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(IEnumerable<CuentaResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> ObtenerMisCuentas(CancellationToken cancellationToken)
+    public async Task<IActionResult> ObtenerMisCuentas(
+        [FromQuery] GenericQueryParams queryParams,
+        CancellationToken cancellationToken)
     {
         var subClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (subClaim is null || !Guid.TryParse(subClaim, out var usuarioId))
             return Unauthorized(new { error = "Token inválido: no se pudo identificar al usuario." });
 
-        var resultado = await _consultarMisCuentas.EjecutarAsync(usuarioId, cancellationToken);
-        return Ok(resultado.Valor);
+        var resultado = await _consultarMisCuentas.EjecutarAsync(usuarioId, queryParams, cancellationToken);
+
+        var pagedResult = resultado.Valor!;
+
+        var paginationMetadata = new
+        {
+            pagedResult.TotalCount,
+            pagedResult.PageSize,
+            pagedResult.PageNumber,
+            pagedResult.TotalPages,
+        };
+
+        Response.Headers["X-Pagination"] = JsonSerializer.Serialize(paginationMetadata, _camelCase);
+
+        return Ok(pagedResult.Items);
     }
 
     /// <summary>Consulta el saldo disponible de una cuenta.</summary>
@@ -138,7 +158,7 @@ public sealed class CuentasController : ControllerBase
             pagedResult.TotalPages
         };
 
-        Response.Headers["X-Pagination"] = JsonSerializer.Serialize(paginationMetadata);
+        Response.Headers["X-Pagination"] = JsonSerializer.Serialize(paginationMetadata, _camelCase);
 
         return Ok(pagedResult.Items);
     }
