@@ -20,15 +20,16 @@ internal sealed class JwtService : IJwtService
         _configuration = configuration;
     }
 
-    public string GenerarToken(Guid usuarioId, string nombreUsuario, IEnumerable<string> roles)
+    public string GenerarToken(Guid usuarioId, string nombreUsuario, string email, IEnumerable<string> roles)
     {
         var (clave, credenciales, issuer, audience, expiresMinutes) = ObtenerParametros();
 
         var claims = new List<Claim>
         {
-            new(JwtRegisteredClaimNames.Sub, usuarioId.ToString()),
+            new(JwtRegisteredClaimNames.Sub,        usuarioId.ToString()),
             new(JwtRegisteredClaimNames.UniqueName, nombreUsuario),
-            new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+            new(JwtRegisteredClaimNames.Email,      email),
+            new(JwtRegisteredClaimNames.Jti,        Guid.NewGuid().ToString()),
             new(JwtRegisteredClaimNames.Iat,
                 DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString(),
                 ClaimValueTypes.Integer64)

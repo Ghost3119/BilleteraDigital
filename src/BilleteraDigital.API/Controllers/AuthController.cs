@@ -57,7 +57,7 @@ public sealed class AuthController : ControllerBase
         if (usuario is null || !_passwordHasher.Verificar(request.Password, usuario.PasswordHash))
             return Unauthorized(new { error = "Credenciales inválidas." });
 
-        var accessToken  = _jwtService.GenerarToken(usuario.Id, usuario.Nombre, ["Usuario"]);
+        var accessToken  = _jwtService.GenerarToken(usuario.Id, usuario.Nombre, usuario.Email, ["Usuario"]);
         var refreshToken = GenerarRefreshTokenSeguro();
 
         usuario.ActualizarRefreshToken(refreshToken, DateTime.UtcNow.AddDays(RefreshTokenDias));
@@ -111,7 +111,7 @@ public sealed class AuthController : ControllerBase
         }
 
         // 4. Rotar: generar nuevo par y persistir
-        var nuevoAccessToken  = _jwtService.GenerarToken(usuario.Id, usuario.Nombre, ["Usuario"]);
+        var nuevoAccessToken  = _jwtService.GenerarToken(usuario.Id, usuario.Nombre, usuario.Email, ["Usuario"]);
         var nuevoRefreshToken = GenerarRefreshTokenSeguro();
 
         usuario.ActualizarRefreshToken(nuevoRefreshToken, DateTime.UtcNow.AddDays(RefreshTokenDias));

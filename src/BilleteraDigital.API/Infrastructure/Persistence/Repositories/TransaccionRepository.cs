@@ -24,10 +24,11 @@ internal sealed class TransaccionRepository : ITransaccionRepository
         GenericQueryParams queryParams,
         CancellationToken cancellationToken = default)
     {
-        // Base: todas las transacciones de la cuenta, sin materializar aún.
+        // Base: todas las transacciones donde la cuenta participó, ya sea como
+        // origen (egresos, depósitos, retiros) o como destino (transferencias entrantes).
         IQueryable<Transaccion> query = _context.Transacciones
             .AsNoTracking()
-            .Where(t => t.CuentaOrigenId == cuentaId);
+            .Where(t => t.CuentaOrigenId == cuentaId || t.CuentaDestinoId == cuentaId);
 
         // ── Filtros dinámicos ────────────────────────────────────────────────
         // GetDecodedFilters() ya normaliza claves a camelCase (PropertyNameCaseInsensitive).
@@ -78,7 +79,7 @@ internal sealed class TransaccionRepository : ITransaccionRepository
         CancellationToken cancellationToken = default)
         => await _context.Transacciones
                          .AsNoTracking()
-                         .Where(t => t.CuentaOrigenId == cuentaId)
+                         .Where(t => t.CuentaOrigenId == cuentaId || t.CuentaDestinoId == cuentaId)
                          .OrderByDescending(t => t.FechaHora)
                          .ToListAsync(cancellationToken);
 

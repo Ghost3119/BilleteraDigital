@@ -8,7 +8,7 @@ namespace BilleteraDigital.Application.Ports.Services;
 /// </summary>
 public interface IJwtService
 {
-    string GenerarToken(Guid usuarioId, string nombreUsuario, IEnumerable<string> roles);
+    string GenerarToken(Guid usuarioId, string nombreUsuario, string email, IEnumerable<string> roles);
 
     /// <summary>
     /// Valida la firma y los claims de un JWT que puede estar expirado.
