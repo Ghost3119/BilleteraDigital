@@ -41,6 +41,13 @@ public sealed class RealizarTransferencia
         TransferenciaCommand command,
         CancellationToken cancellationToken = default)
     {
+        // ── 0. Validaciones de límites de negocio ─────────────────────────────
+        if (command.Monto <= 0)
+            return Result<TransferenciaResponse>.Fallido("El monto debe ser mayor a $0");
+ 
+        if (command.Monto > 50000)
+            return Result<TransferenciaResponse>.Fallido("El límite por transferencia es de $50,000 MXN");
+            
         // ── 1. Cargar cuenta origen ───────────────────────────────────────────
         var cuentaOrigen = await _cuentaRepository.ObtenerPorIdAsync(command.CuentaOrigenId, cancellationToken);
         if (cuentaOrigen is null)
