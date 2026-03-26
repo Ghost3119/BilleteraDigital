@@ -1,0 +1,30 @@
+name: Revisor de Código Backend
+
+on:
+  pull_request:
+    branches:
+      - main
+      - master
+
+jobs:
+  build:
+    name: Build y validación del proyecto .NET
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout del código
+        uses: actions/checkout@v4
+
+      - name: Configurar .NET 9.0.x
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Restaurar dependencias
+        run: dotnet restore
+
+      - name: Build del proyecto en Release
+        run: dotnet build --configuration Release --no-restore
+
+      - name: Verificar éxito
+        run: echo "✅ Build exitoso. El código está listo para revisión."
